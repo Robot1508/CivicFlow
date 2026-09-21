@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "source": "."
+  },
+  "emulators": {
+    "functions": {
+      "port": 5001,
+      "host": "0.0.0.0"
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}

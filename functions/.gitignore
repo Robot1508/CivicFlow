@@ -1,0 +1,16 @@
+# Compiled output
+lib/
+node_modules/
+
+# Secrets & Environment variables
+.env
+.env.*
+*.secret
+*.local
+
+# Firebase caches & logs
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
