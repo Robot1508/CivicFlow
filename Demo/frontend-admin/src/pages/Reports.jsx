@@ -1,166 +1,68 @@
-import { Card } from '../components/ui/index.jsx';
-import { useApp } from '../context/AppContext';
-import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
-} from 'recharts';
-import { mockCategoryTrend, mockResolutionTrend, mockWards } from '../data/mockData';
-import { Download } from 'lucide-react';
+import React from 'react';
+import { BarChart3, Bot, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 
-const COLORS = ['#2563eb', '#0ea5e9', '#f59e0b', '#16a34a', '#8b5cf6', '#ec4899'];
-
-export default function Reports() {
-  const { issues, workers } = useApp();
-
-  const catMap = {};
-  issues.forEach(i => { catMap[i.category] = (catMap[i.category] || 0) + 1; });
-  const pieData = Object.entries(catMap).map(([name, value]) => ({ name, value }));
-
-  const statusMap = {};
-  issues.forEach(i => { statusMap[i.status] = (statusMap[i.status] || 0) + 1; });
-  const statusData = Object.entries(statusMap).map(([name, value]) => ({ name, value }));
-
-  const workerPerf = workers.map(w => ({
-    name: w.name.split(' ')[0],
-    completed: w.completedTasks,
-    avgTime: w.avgResolutionHours,
-  }));
-
-  const wardData = mockWards.map(w => ({
-    ward: w.id.replace('Ward ', 'W'),
-    total: w.totalIssues,
-    resolved: w.resolved,
-    pending: w.pending,
-  }));
-
+export default function Reports({ callLogs = [] }) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
-          <p className="text-gray-500 text-sm mt-1">System-wide performance insights</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors">
-          <Download size={15} /> Export Report
-        </button>
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Analytics & AI Dispatch Reports</h1>
+        <p className="text-sm text-gray-500">Performance insights, resolution throughput, and AI telephony metrics.</p>
       </div>
 
-      {/* Summary KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Issues', value: issues.length, color: 'text-blue-700' },
-          { label: 'Resolution Rate', value: `${Math.round((issues.filter(i => ['Resolved','Closed'].includes(i.status)).length / issues.length) * 100)}%`, color: 'text-green-600' },
-          { label: 'High Priority', value: issues.filter(i => i.priority === 'High').length, color: 'text-red-600' },
-          { label: 'Active Workers', value: workers.filter(w => w.status === 'Active').length, color: 'text-purple-600' },
-        ].map(k => (
-          <Card key={k.label} className="p-4 text-center">
-            <p className={`text-3xl font-bold ${k.color}`}>{k.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{k.label}</p>
-          </Card>
-        ))}
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase">AI Calls Dispatched</span>
+            <Bot className="w-5 h-5 text-blue-600" />
+          </div>
+          <h3 className="text-3xl font-black text-gray-900 mt-2">{callLogs.length + 12}</h3>
+          <p className="text-xs text-emerald-600 font-medium mt-1">100% automated outreach</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase">Avg Call Duration</span>
+            <Clock className="w-5 h-5 text-indigo-600" />
+          </div>
+          <h3 className="text-3xl font-black text-gray-900 mt-2">1m 45s</h3>
+          <p className="text-xs text-gray-500 font-medium mt-1">Fast structured extraction</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase">Resolution Acceleration</span>
+            <CheckCircle className="w-5 h-5 text-emerald-600" />
+          </div>
+          <h3 className="text-3xl font-black text-emerald-600 mt-2">3.4x Faster</h3>
+          <p className="text-xs text-emerald-600 font-medium mt-1">Compared to manual phone followups</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category trend */}
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Monthly Issues by Category</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={mockCategoryTrend} barSize={7} barGap={1}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="Road" fill="#2563eb" radius={[2,2,0,0]} />
-              <Bar dataKey="Water" fill="#0ea5e9" radius={[2,2,0,0]} />
-              <Bar dataKey="Electricity" fill="#f59e0b" radius={[2,2,0,0]} />
-              <Bar dataKey="Garbage" fill="#16a34a" radius={[2,2,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Resolution trend */}
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Avg Resolution Time (Hours)</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={mockResolutionTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-              <Line type="monotone" dataKey="avgHours" stroke="#2563eb" strokeWidth={2.5} dot={{ fill: '#2563eb', r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Category distribution */}
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Category Distribution</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
-                {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Ward performance */}
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Ward-wise Issues</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={wardData} barSize={10} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="ward" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="resolved" fill="#22c55e" radius={[2,2,0,0]} name="Resolved" />
-              <Bar dataKey="pending" fill="#f59e0b" radius={[2,2,0,0]} name="Pending" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+      {/* Call Log Summary */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+        <h3 className="font-bold text-gray-900 text-base">Recent AI Call Telemetry</h3>
+        <div className="divide-y divide-gray-100">
+          {callLogs.map((log) => (
+            <div key={log.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="font-mono font-bold text-blue-700 mr-2">{log.id}</span>
+                <span className="font-bold text-gray-800">{log.officerName} ({log.department})</span>
+                <p className="text-gray-500 text-[11px] mt-0.5">{log.summary}</p>
+              </div>
+              <div className="text-right">
+                <span className="px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800">
+                  {log.status}
+                </span>
+                <p className="text-[11px] text-gray-400 mt-0.5">{new Date(log.initiatedAt).toLocaleTimeString()}</p>
+              </div>
+            </div>
+          ))}
+          {callLogs.length === 0 && (
+            <p className="text-xs text-gray-400 py-4 text-center">No AI calls logged yet in this session.</p>
+          )}
+        </div>
       </div>
-
-      {/* Worker performance table */}
-      <Card>
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-800">Worker Performance</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                {['Worker', 'Category', 'Ward', 'Completed Tasks', 'Open Tasks', 'Avg Resolution', 'Status'].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-gray-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {workers.map(w => (
-                <tr key={w.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3 font-medium text-gray-800">{w.name}</td>
-                  <td className="px-5 py-3 text-gray-600">{w.category}</td>
-                  <td className="px-5 py-3 text-gray-600">{w.ward}</td>
-                  <td className="px-5 py-3">
-                    <span className="text-green-600 font-semibold">{w.completedTasks}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className={`font-semibold ${w.openTasks >= 3 ? 'text-red-600' : w.openTasks >= 1 ? 'text-yellow-600' : 'text-gray-400'}`}>
-                      {w.openTasks}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600">{w.avgResolutionHours}h</td>
-                  <td className="px-5 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${w.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {w.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   );
 }

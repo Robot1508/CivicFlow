@@ -1,251 +1,215 @@
-import { useApp } from '../context/AppContext';
-import { Card, StatusBadge, PriorityBadge } from '../components/ui/index.jsx';
-import {
-  AlertCircle, CheckCircle2, Clock, Users,
-  TrendingUp, Trash2, ArrowUpRight, Activity
+import React, { useState } from 'react';
+import { 
+  AlertCircle, 
+  CheckCircle2, 
+  Clock, 
+  PhoneCall, 
+  Filter, 
+  MapPin, 
+  User,
+  ArrowUpRight,
+  TrendingUp
 } from 'lucide-react';
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts';
-import { mockCategoryTrend, mockResolutionTrend, mockActivityLog } from '../data/mockData';
+import { useNavigate } from 'react-router-dom';
+import CallDispatchButton from '../components/CallDispatchButton';
 
-const PIE_COLORS = ['#2563eb', '#0ea5e9', '#f59e0b', '#16a34a', '#8b5cf6', '#ec4899'];
+export default function Dashboard({ complaints = [], workers = [], onTriggerCall }) {
+  const navigate = useNavigate();
+  const [selectedDept, setSelectedDept] = useState('All');
 
-function KpiCard({ title, value, sub, icon: Icon, color, trend }) {
+  const filteredComplaints = selectedDept === 'All'
+    ? complaints
+    : complaints.filter(c => c.department === selectedDept);
+
+  const totalComplaints = complaints.length;
+  const pendingComplaints = complaints.filter(c => c.status !== 'Resolved' && c.status !== 'Closed').length;
+  const inProgressComplaints = complaints.filter(c => c.status === 'In Progress').length;
+  const resolvedComplaints = complaints.filter(c => c.status === 'Resolved').length;
+
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between">
+    <div className="p-6 space-y-6">
+      {/* Page Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-sm text-gray-500 font-medium">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-          {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Municipal Command Center</h1>
+          <p className="text-sm text-gray-500">Real-time civic issue tracking, officer allocation, and automated AI dispatching.</p>
         </div>
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon size={22} className="text-white" />
+        <button
+          onClick={() => navigate('/calls')}
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition-all self-start sm:self-auto"
+        >
+          <PhoneCall className="w-4 h-4 text-blue-200" />
+          <span>Open AI Voice Dispatch</span>
+        </button>
+      </div>
+
+      {/* Overview Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Complaints</p>
+            <h3 className="text-2xl font-extrabold text-gray-900 mt-1">{totalComplaints}</h3>
+            <p className="text-xs text-emerald-600 font-medium mt-1 flex items-center">
+              <TrendingUp className="w-3 h-3 mr-1" /> +12% from last week
+            </p>
+          </div>
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Action Pending</p>
+            <h3 className="text-2xl font-extrabold text-amber-600 mt-1">{pendingComplaints}</h3>
+            <p className="text-xs text-amber-600 font-medium mt-1">Requires follow-up</p>
+          </div>
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold">
+            <Clock className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">In Progress</p>
+            <h3 className="text-2xl font-extrabold text-indigo-600 mt-1">{inProgressComplaints}</h3>
+            <p className="text-xs text-indigo-600 font-medium mt-1">Officers dispatched</p>
+          </div>
+          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+            <User className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Resolved</p>
+            <h3 className="text-2xl font-extrabold text-emerald-600 mt-1">{resolvedComplaints}</h3>
+            <p className="text-xs text-emerald-600 font-medium mt-1">Avg 14.2h resolution</p>
+          </div>
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
         </div>
       </div>
-      {trend !== undefined && (
-        <div className="mt-3 flex items-center gap-1 text-green-600 text-xs font-medium">
-          <TrendingUp size={13} />
-          <span>{trend}</span>
+
+      {/* Active Complaints Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Table Filter Header */}
+        <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+          <div>
+            <h2 className="text-base font-bold text-gray-900">Active Grievance Log</h2>
+            <p className="text-xs text-gray-500">Select any grievance to trigger an automated AI status verification call to the assigned officer.</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="All">All Departments</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Sanitation">Sanitation</option>
+              <option value="Water Supply">Water Supply</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Traffic Control">Traffic Control</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
         </div>
-      )}
-    </Card>
-  );
-}
 
-export default function Dashboard() {
-  const { issues, workers, bins } = useApp();
-
-  const total = issues.length;
-  const highPriority = issues.filter(i => i.priority === 'High').length;
-  const resolved = issues.filter(i => i.status === 'Resolved' || i.status === 'Closed').length;
-  const activeWorkers = workers.filter(w => w.status === 'Active').length;
-  const overflowBins = bins.filter(b => b.status === 'Overflow').length;
-
-  const avgResolution = (() => {
-    const done = issues.filter(i => i.resolutionTime);
-    if (!done.length) return '—';
-    const avg = done.reduce((sum, i) => {
-      const diff = new Date(i.resolutionTime) - new Date(i.reportedAt);
-      return sum + diff / 3600000;
-    }, 0) / done.length;
-    return `${Math.round(avg)}h`;
-  })();
-
-  // Category distribution for pie
-  const catMap = {};
-  issues.forEach(i => { catMap[i.category] = (catMap[i.category] || 0) + 1; });
-  const pieData = Object.entries(catMap).map(([name, value]) => ({ name, value }));
-
-  // High priority unassigned
-  const urgent = issues.filter(i => i.priority === 'High' && !i.assignedTo);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-        <p className="text-gray-500 text-sm mt-1">Ichalkaranji Municipal Corporation — Real-time overview</p>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Total Issues" value={total} sub="All time" icon={AlertCircle} color="bg-blue-600" trend="+4 today" />
-        <KpiCard title="High Priority" value={highPriority} sub="Needs attention" icon={Activity} color="bg-red-500" />
-        <KpiCard title="Avg Resolution" value={avgResolution} sub="Resolved issues" icon={Clock} color="bg-orange-500" trend="↓ 2h vs last week" />
-        <KpiCard title="Active Workers" value={activeWorkers} sub={`of ${workers.length} total`} icon={Users} color="bg-green-600" />
-      </div>
-
-      {/* Second row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 col-span-2 lg:col-span-1">
-          <p className="text-sm text-gray-500 font-medium">Resolved Today</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{resolved}</p>
-          <p className="text-xs text-gray-400 mt-1">Closed + Resolved</p>
-          <div className="mt-3 flex items-center gap-1 text-green-600 text-xs font-medium">
-            <CheckCircle2 size={13} />
-            <span>+3 from yesterday</span>
-          </div>
-        </Card>
-        <Card className="p-5 col-span-2 lg:col-span-1">
-          <p className="text-sm text-gray-500 font-medium">Garbage Overflow</p>
-          <p className="text-3xl font-bold text-red-600 mt-1">{overflowBins}</p>
-          <p className="text-xs text-gray-400 mt-1">Bins need immediate action</p>
-          <div className="mt-3 flex items-center gap-1 text-red-500 text-xs font-medium">
-            <Trash2 size={13} />
-            <span>Requires attention</span>
-          </div>
-        </Card>
-
-        {/* Urgent unassigned */}
-        <Card className="p-5 col-span-2 lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-800">Urgent Unassigned Issues</h3>
-            <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full font-medium">{urgent.length} issues</span>
-          </div>
-          <div className="space-y-2">
-            {urgent.slice(0, 3).map(issue => (
-              <div key={issue.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{issue.title}</p>
-                  <p className="text-xs text-gray-400">{issue.id} · {issue.ward}</p>
-                </div>
-                <PriorityBadge priority={issue.priority} />
-              </div>
-            ))}
-            {urgent.length === 0 && <p className="text-sm text-gray-400 text-center py-2">All urgent issues assigned</p>}
-          </div>
-        </Card>
-      </div>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Category trend */}
-        <Card className="p-5 lg:col-span-2">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Issues by Category (Last 6 Months)</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={mockCategoryTrend} barSize={8} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
-              <Bar dataKey="Road" fill="#2563eb" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Water" fill="#0ea5e9" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Electricity" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Garbage" fill="#16a34a" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Traffic" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Pie chart */}
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Category Distribution</h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-2 space-y-1">
-            {pieData.map((d, i) => (
-              <div key={d.name} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="text-gray-600">{d.name}</span>
-                </div>
-                <span className="font-medium text-gray-800">{d.value}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Resolution trend + Activity log */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="p-5 lg:col-span-2">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Avg Resolution Time Trend (Hours)</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={mockResolutionTrend}>
-              <defs>
-                <linearGradient id="resGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
-              <Area type="monotone" dataKey="avgHours" stroke="#2563eb" strokeWidth={2} fill="url(#resGrad)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            {mockActivityLog.slice(0, 6).map(log => (
-              <div key={log.id} className="flex items-start gap-3">
-                <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0
-                  ${log.type === 'alert' ? 'bg-red-500' :
-                    log.type === 'resolve' ? 'bg-green-500' :
-                    log.type === 'assign' ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                <div>
-                  <p className="text-xs text-gray-700">{log.action}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {log.actor} · {new Date(log.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Recent issues table */}
-      <Card>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-800">Recent Issues</h3>
-          <a href="/issues" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-            View all <ArrowUpRight size={12} />
-          </a>
-        </div>
+        {/* Complaints Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500">ID</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500">Issue</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 hidden md:table-cell">Ward</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 hidden lg:table-cell">Priority</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 hidden lg:table-cell">Assigned To</th>
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-100 text-xs text-gray-500 uppercase font-semibold">
+              <tr>
+                <th className="px-5 py-3">ID & Title</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Location & Ward</th>
+                <th className="px-5 py-3">Priority</th>
+                <th className="px-5 py-3">Assigned Officer</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {issues.slice(0, 6).map(issue => (
-                <tr key={issue.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-3 text-blue-600 font-medium">{issue.id}</td>
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-gray-800 truncate max-w-[200px]">{issue.title}</p>
-                    <p className="text-xs text-gray-400">{issue.category}</p>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{issue.ward}</td>
-                  <td className="px-5 py-3"><StatusBadge status={issue.status} /></td>
-                  <td className="px-5 py-3 hidden lg:table-cell"><PriorityBadge priority={issue.priority} /></td>
-                  <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{issue.assignedTo || '—'}</td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-gray-200">
+              {filteredComplaints.map((item) => {
+                const assignedWorker = workers.find(w => w.name === item.assignedTo);
+                const phone = assignedWorker ? assignedWorker.phone : item.assignedToPhone || "+919876543210";
+
+                return (
+                  <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="font-bold text-gray-900">{item.id}</div>
+                      <div className="text-xs text-gray-600 font-medium max-w-xs truncate">{item.title}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2.5 py-1 rounded-md font-medium">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center space-x-1 text-xs text-gray-700 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>{item.ward}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 max-w-xs truncate">{item.location?.address}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        item.priority === 'Critical' || item.priority === 'High'
+                          ? 'bg-red-100 text-red-800'
+                          : item.priority === 'Medium'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {item.priority} ({item.priorityScore})
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="font-semibold text-gray-900 text-xs">{item.assignedTo || 'Unassigned'}</div>
+                      <div className="text-[11px] text-gray-500">{phone}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
+                        item.status === 'Resolved'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : item.status === 'In Progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <CallDispatchButton
+                          ticketId={item.id}
+                          landmark={item.ward || item.location?.address}
+                          issueType={item.category || item.title}
+                          defaultPhone={phone}
+                        />
+                        <button
+                          onClick={() => {
+                            if (onTriggerCall) {
+                              onTriggerCall(item, assignedWorker || { name: item.assignedTo, phone, category: item.department, ward: item.ward });
+                            }
+                            navigate('/calls');
+                          }}
+                          className="inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          <span>Call Officer</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
